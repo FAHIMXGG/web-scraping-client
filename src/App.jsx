@@ -3,7 +3,18 @@ import { SearchBar, Dropdown, Button, Spinner } from "keep-react";
 import { useState } from "react";
 import JSZip from "jszip";
 
-const domainRegex = /^(?!-)[A-Za-z0-9-]{1,63}(?<!-)\.[A-Za-z]{2,6}$/;
+const domainRegex = /^(?!-)(?:[A-Za-z0-9-]{1,63}\.)+[A-Za-z]{2,}(?::\d+)?$/;
+
+function sanitizeDomainInput(input) {
+  let url = input.trim()
+    .replace(/^@/, '')
+    .replace(/^https?:\/\//i, '')
+    .replace(/^www\./i, '');
+  if (url.endsWith('/') && url.split('/').length === 2) {
+    url = url.slice(0, -1);
+  }
+  return url;
+}
 
 const App = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,24 +29,15 @@ const App = () => {
     setSearchTerm(searchTerm);
   };
 
-  const sanitizeDomain = (input) => {
-    let domain = input.trim();
-    domain = domain.replace(/^@/, '');
-    domain = domain.replace(/^https?:\/\//, '');
-    domain = domain.replace(/^www\./, '');
-    domain = domain.replace(/\/$/, '');
-    return domain;
-  };
-
   const handleSearch = () => {
-    const sanitized = sanitizeDomain(searchTerm);
-    if (!domainRegex.test(sanitized)) {
-      setModalError("Please enter a valid domain, e.g. example.com");
+    const sanitized = sanitizeDomainInput(searchTerm);
+    const domainPart = sanitized.split('/')[0];
+    if (!domainRegex.test(domainPart)) {
+      setModalError("Please enter a valid domain, e.g. example.com or sub.example.com");
       setShowModal(true);
       return;
     }
     setLoading(true);
-
     fetch(`https://web2-server.vercel.app/https:/${sanitized}`)
       .then((response) => response.json())
       .then((data) => {
@@ -104,7 +106,6 @@ const App = () => {
       )}
       <div className="w-full max-w-3xl bg-white rounded-2xl shadow-xl p-8 flex flex-col gap-6">
         <h1 className="text-3xl font-bold text-green-700 text-center mb-2 tracking-tight">Web Analyzer</h1>
-        
         <SearchBar
           placeholder="example.com"
           handleOnChange={handleOnChange}
