@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "autoprefixer": "^10.4.16",
+    "jszip": "^3.10.1",
     "keep-react": "^1.0.1",
     "localforage": "^1.10.0",
     "match-sorter": "^6.3.1",
